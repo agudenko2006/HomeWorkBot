@@ -1,4 +1,7 @@
+use std::path::Path;
+
 use color_eyre::eyre::Result;
+use homeworkbot::parse_homework;
 use teloxide::{prelude::*, utils::command::BotCommands};
 
 #[derive(BotCommands, Clone)]
@@ -21,6 +24,8 @@ async fn main() -> Result<()> {
     log::info!("Starting HomeWorkBot...");
     color_eyre::install()?;
 
+    dbg!(parse_homework(Path::new("demo")));
+
     let bot = Bot::from_env();
 
     Command::repl(bot, answer).await;
@@ -34,14 +39,8 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
                 .await?
         }
-        Command::Today => {
-            bot.send_message(msg.chat.id, "Not implemented yet")
-                .await?
-        }
-        Command::Tomorrow => {
-            bot.send_message(msg.chat.id, "Not implemented yet")
-                .await?
-        }
+        Command::Today => bot.send_message(msg.chat.id, "Not implemented yet").await?,
+        Command::Tomorrow => bot.send_message(msg.chat.id, "Not implemented yet").await?,
     };
 
     Ok(())
