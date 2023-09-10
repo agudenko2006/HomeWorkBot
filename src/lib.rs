@@ -28,6 +28,8 @@ fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
         panic!("Provided path ({:?}) is not a directory", path)
     }
 
+    let regex = Regex::new(r"(\d{4})-(\w{3})-homework").unwrap();
+
     let raw: Vec<_> = fs::read_dir(path)?
         .map(|entry| {
             let entry = entry.unwrap();
@@ -35,12 +37,17 @@ fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
 
             // todo!("optimize this")
             if path.is_dir() {
-                read_directory(&path).unwrap()
-            } else {
+                return read_directory(&path).unwrap()
+            }
+
+            let name = entry.file_name().into_string().unwrap();
+            if let Some(_) = regex.captures(&name) {
                 vec![File {
-                    name: entry.file_name().into_string().unwrap(),
+                    name,
                     body: fs::read_to_string(path).unwrap(),
                 }]
+            } else {
+                vec![]
             }
         })
         .flatten()
