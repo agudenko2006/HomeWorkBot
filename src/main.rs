@@ -26,6 +26,8 @@ async fn main() -> Result<()> {
 
     dbg!(parse_homework(Path::new("demo")));
 
+    return Ok(());
+
     let bot = Bot::from_env();
 
     Command::repl(bot, answer).await;

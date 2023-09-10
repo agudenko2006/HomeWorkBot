@@ -1,6 +1,6 @@
 #homework #stage/active  #priority/normal [[projects/school]]
 
-FROM 2023-09-05
+FROM 0905
 
 ---
 
