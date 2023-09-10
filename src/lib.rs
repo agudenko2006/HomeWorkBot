@@ -7,15 +7,15 @@ mod date;
 
 #[derive(Debug)]
 pub struct Assignment {
-    subject: String,
-    from: Date,
-    to: Date,
-    tasks: Vec<Task>,
+    pub subject: String,
+    pub from: Date,
+    pub to: Date,
+    pub tasks: Vec<Task>,
 }
 
 #[derive(Debug)]
 pub struct Task {
-    body: String,
+    pub body: String,
 }
 
 pub struct File {
@@ -37,7 +37,7 @@ fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
 
             // todo!("optimize this")
             if path.is_dir() {
-                return read_directory(&path).unwrap()
+                return read_directory(&path).unwrap();
             }
 
             let name = entry.file_name().into_string().unwrap();
@@ -77,11 +77,12 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
                 .unwrap()
                 .as_str();
 
-            let tasks: Vec<Task> = task_regex.captures_iter(&file.body).map(|task| {
-                Task {
+            let tasks: Vec<Task> = task_regex
+                .captures_iter(&file.body)
+                .map(|task| Task {
                     body: task.get(1).unwrap().as_str().to_string(),
-                }
-            }).collect();
+                })
+                .collect();
 
             Assignment {
                 subject,

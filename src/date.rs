@@ -1,4 +1,4 @@
-use regex::{Match, Regex};
+use regex::Regex;
 
 /// YMD date
 #[derive(Debug)]
@@ -13,7 +13,9 @@ impl Date {
     /// todo!("add tests")
     pub fn from(string: &str) -> Self {
         let regex = Regex::new(r"^(\d{2})?-?(\d{2})-?(\d{2})$").unwrap();
-        let caps = regex.captures(string).expect(&format!("`{}` is not a Date", string));
+        let caps = regex
+            .captures(string)
+            .expect(&format!("`{}` is not a Date", string));
 
         let year = caps.get(1);
         let month = caps.get(2).unwrap().as_str().parse().unwrap();
