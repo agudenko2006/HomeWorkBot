@@ -1,8 +1,8 @@
-use std::path::{Path, PathBuf};
+use std::{path::{PathBuf}, collections::HashMap};
 
 use clap::Parser;
 use color_eyre::eyre::Result;
-use homeworkbot::{parse_homework, Assignment};
+use homeworkbot::{parse_homework, Assignment, parse_config};
 use teloxide::{prelude::*, utils::command::BotCommands};
 
 /// A telegram bot that sends the homework
@@ -12,6 +12,9 @@ struct Cli {
     /// Path to the Obsidian vault that stores tasks.
     /// Homework tasks are named `mmdd-sbj-homework` where sbj is the subject (3 letters)
     vault: PathBuf,
+
+    /// Path to the config.toml file (read the README)
+    config: PathBuf,
 }
 
 #[derive(BotCommands, Clone)]
@@ -38,16 +41,24 @@ async fn main() -> Result<()> {
     log::info!("Starting HomeWorkBot...");
     color_eyre::install()?;
 
-    let args = Cli::parse();
+    // todo!("USE THIS!!!")
+    let _args = Cli::parse();
 
     let bot = Bot::from_env();
 
+    // todo!("implement a proper dispatcher")
     Command::repl(bot, answer).await;
 
     Ok(())
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
+    // todo!("optimize")
+    let args = Cli::parse();
+    let homework = parse_homework(&args.vault);
+    let config = parse_config(&args.config);
+    let subjects = config.subjects;
+
     match cmd {
         Command::Start => {
             bot.send_message(msg.chat.id, "Hello world. I am v0.0.0")
@@ -60,9 +71,8 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 .await?;
         }
         Command::All => {
-            let homework = parse_homework(Path::new("demo"));
             for assignment in homework {
-                bot.send_message(msg.chat.id, form_message(&assignment))
+                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
                     .await?;
             }
         }
@@ -77,9 +87,11 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
     Ok(())
 }
 
-fn form_message(assignment: &Assignment) -> String {
+fn form_message(assignment: &Assignment, subject_names: &HashMap<String, String>) -> String {
+    let subject = subject_names.get(&assignment.subject).unwrap_or(&assignment.subject);
+
     if assignment.tasks.len() == 1 {
-        format!("{}: {}", assignment.subject, assignment.tasks[0].body)
+        format!("{}: {}", subject, assignment.tasks[0].body)
     } else {
         let tasks: String = assignment
             .tasks
@@ -87,6 +99,6 @@ fn form_message(assignment: &Assignment) -> String {
             .map(|task| format!("+ {}\n", task.body))
             .collect();
 
-        format!("{}:\n{}", assignment.subject, tasks)
+        format!("{}:\n{}", subject, tasks)
     }
 }

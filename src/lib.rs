@@ -1,7 +1,9 @@
 use date::Date;
 use regex::Regex;
+use std::collections::HashMap;
 use std::fs::{self};
 use std::path::Path;
+use serde::Deserialize;
 
 mod date;
 
@@ -92,4 +94,16 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
             }
         })
         .collect()
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    pub subjects: HashMap<String, String>
+}
+
+pub fn parse_config(path: &Path) -> Config {
+    let file = fs::read_to_string(path).unwrap();
+    let conf: Config = toml::from_str(&file).unwrap();
+
+    conf
 }
