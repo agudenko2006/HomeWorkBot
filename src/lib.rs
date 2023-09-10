@@ -7,6 +7,7 @@ mod date;
 
 #[derive(Debug)]
 pub struct Assignment {
+    subject: String,
     from: Date,
     to: Date,
     tasks: Vec<Task>,
@@ -52,6 +53,7 @@ fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
 pub fn parse_homework(path: &Path) -> Vec<Assignment> {
     let end_regex = Regex::new(r"FROM \d{0,2}(\d{0,2}-?\d{2}-?\d{2})").unwrap();
     let filename_regex = Regex::new(r"(\d{4})-(\w{3})-homework").unwrap();
+    let task_regex = Regex::new(r"[+*-] \[.\] (.+)").unwrap();
 
     read_directory(path)
         .unwrap()
@@ -59,7 +61,7 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
         .map(|file| {
             let filename = filename_regex.captures(&file.name).unwrap();
 
-            let subject = filename.get(2).unwrap().as_str();
+            let subject = filename.get(2).unwrap().as_str().to_string();
             let to = filename.get(1).unwrap().as_str();
             let end = end_regex
                 .captures(&file.body)
@@ -68,10 +70,17 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
                 .unwrap()
                 .as_str();
 
+            let tasks: Vec<Task> = task_regex.captures_iter(&file.body).map(|task| {
+                Task {
+                    body: task.get(1).unwrap().as_str().to_string(),
+                }
+            }).collect();
+
             Assignment {
+                subject,
                 from: Date::from(end),
                 to: Date::from(to),
-                tasks: vec![],
+                tasks,
             }
         })
         .collect()
