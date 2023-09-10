@@ -57,6 +57,7 @@ async fn main() -> Result<()> {
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
+    println!("\n\n\nRECEIVED `{:?}`\n", msg);
     // todo!("optimize")
     let args = Cli::parse();
     let homework = parse_homework(&args.vault);
@@ -85,8 +86,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         }
         Command::All => {
             for assignment in homework {
-                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
-                    .await?;
+                let message = form_message(&assignment, &subjects);
+                println!("SENDING `{}`", message);
+                bot.send_message(msg.chat.id, message).await?;
             }
         }
         Command::From(date) => {
@@ -105,8 +107,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                     continue;
                 }
 
-                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
-                    .await?;
+                let message = form_message(&assignment, &subjects);
+                println!("SENDING `{}`", message);
+                bot.send_message(msg.chat.id, message).await?;
             }
         }
         Command::To(date) => {
@@ -125,8 +128,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                     continue;
                 }
 
-                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
-                    .await?;
+                let message = form_message(&assignment, &subjects);
+                println!("SENDING `{}`", message);
+                bot.send_message(msg.chat.id, message).await?;
             }
         }
         Command::Today => {
@@ -137,8 +141,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                     continue;
                 }
 
-                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
-                    .await?;
+                let message = form_message(&assignment, &subjects);
+                println!("SENDING `{}`", message);
+                bot.send_message(msg.chat.id, message).await?;
             }
         }
         Command::Tomorrow => {
@@ -150,8 +155,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                     continue;
                 }
 
-                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
-                    .await?;
+                let message = form_message(&assignment, &subjects);
+                println!("SENDING `{}`", message);
+                bot.send_message(msg.chat.id, message).await?;
             }
         }
     };
