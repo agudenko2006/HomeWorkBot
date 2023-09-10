@@ -3,8 +3,8 @@ use chrono::{Datelike, Local};
 use regex::Regex;
 
 /// YMD date
-#[derive(Debug)]
-pub struct Date(u8, u8, u8);
+#[derive(Debug, PartialEq)]
+pub struct Date(pub u8, pub u8, pub u8);
 
 impl Date {
     pub fn new(year: u8, month: u8, day: u8) -> Self {
@@ -44,10 +44,13 @@ impl Date {
         )
     }
 
+    pub fn comes_before(&self, another: Self) -> bool {
+        // Please create an issue if you know how to do it properly
+        self.0 < another.0 || self.1 < another.1 || self.2 < another.2
+    }
+
     pub fn had_passed(&self) -> bool {
         let now = Date::now();
-        
-        // Please create an issue if you know how to do it properly
-        self.0 < now.0 || self.1 < now.1 || self.2 < now.2
+        self.comes_before(now)
     }
 }

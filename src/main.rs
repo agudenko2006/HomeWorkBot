@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use clap::Parser;
 use color_eyre::eyre::Result;
-use homeworkbot::{parse_config, parse_homework, Assignment};
+use homeworkbot::{date::Date, parse_config, parse_homework, Assignment};
 use teloxide::{prelude::*, utils::command::BotCommands};
 
 /// A telegram bot that sends the homework
@@ -33,6 +33,10 @@ enum Command {
     Today,
     #[command(description = "show homework for tomorrow")]
     Tomorrow,
+    #[command(description = "show homework from the specified date (year-month-day or month-day)")]
+    From(String), // todo!("use the Date type")
+    #[command(description = "show homework from the specified date (year-month-day or month-day)")]
+    To(String),
 }
 
 #[tokio::main]
@@ -59,12 +63,21 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
     let config = parse_config(&args.config);
     let subjects = config.subjects;
 
+    // todo!("simplify this madness")
     match cmd {
         Command::Start => {
-            bot.send_message(msg.chat.id, "Hello world. I am v0.0.0")
-                .await?;
+            bot.send_message(
+                msg.chat.id,
+                format!("Hello world. I am {}, version 0.1.0 beta", config.name),
+            )
+            .await?;
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
                 .await?;
+            bot.send_message(
+                msg.chat.id,
+                "Known issues: /from and /to will crash the bot if it fails to parse them",
+            )
+            .await?;
         }
         Command::Help => {
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
@@ -76,11 +89,70 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                     .await?;
             }
         }
+        Command::From(date) => {
+            if date.is_empty() {
+                bot.send_message(
+                    msg.chat.id,
+                    "Please specify a date (e.g. 09-15 for Sep 15th)",
+                )
+                .await?;
+                return Ok(());
+            }
+            let date = Date::from(&date);
+
+            for assignment in homework {
+                if assignment.from != date {
+                    continue;
+                }
+
+                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
+                    .await?;
+            }
+        }
+        Command::To(date) => {
+            if date.is_empty() {
+                bot.send_message(
+                    msg.chat.id,
+                    "Please specify a date (e.g. 09-15 for Sep 15th)",
+                )
+                .await?;
+                return Ok(());
+            }
+            let date = Date::from(&date);
+
+            for assignment in homework {
+                if assignment.to != date {
+                    continue;
+                }
+
+                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
+                    .await?;
+            }
+        }
         Command::Today => {
-            bot.send_message(msg.chat.id, "Not implemented yet").await?;
+            let now = Date::now();
+
+            for assignment in homework {
+                if assignment.to != now {
+                    continue;
+                }
+
+                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
+                    .await?;
+            }
         }
         Command::Tomorrow => {
-            bot.send_message(msg.chat.id, "Not implemented yet").await?;
+            let now = Date::now();
+            let tomorrow = Date::new(now.0, now.1, now.2 + 1);
+
+            for assignment in homework {
+                if assignment.to != tomorrow {
+                    continue;
+                }
+
+                bot.send_message(msg.chat.id, form_message(&assignment, &subjects))
+                    .await?;
+            }
         }
     };
 

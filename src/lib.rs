@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::fs::{self};
 use std::path::Path;
 
-mod date;
+pub mod date;
 
 #[derive(Debug)]
 pub struct Assignment {
@@ -74,7 +74,10 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
             let to = filename.get(1).unwrap().as_str();
             let end = end_regex
                 .captures(&file.body)
-                .expect(&format!("Couldn't find the date string in the assignment `{}`", file.name))
+                .expect(&format!(
+                    "Couldn't find the date string in the assignment `{}`",
+                    file.name
+                ))
                 .get(1)
                 .unwrap()
                 .as_str();
@@ -100,11 +103,11 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub subjects: HashMap<String, String>,
+    pub name: String,
 }
 
 pub fn parse_config(path: &Path) -> Config {
     let file = fs::read_to_string(path).unwrap();
-    let conf: Config = toml::from_str(&file).unwrap();
 
-    conf
+    toml::from_str(&file).unwrap()
 }
