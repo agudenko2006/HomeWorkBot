@@ -1,8 +1,18 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use color_eyre::eyre::Result;
 use homeworkbot::parse_homework;
 use teloxide::{prelude::*, utils::command::BotCommands};
+use clap::Parser;
+
+/// A telegram bot that sends the homework
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    /// Path to the Obsidian vault that stores tasks.
+    /// Homework tasks are named `mmdd-sbj-homework` where sbj is the subject (3 letters)
+    vault: PathBuf,
+}
 
 #[derive(BotCommands, Clone)]
 #[command(
@@ -24,7 +34,9 @@ async fn main() -> Result<()> {
     log::info!("Starting HomeWorkBot...");
     color_eyre::install()?;
 
-    dbg!(parse_homework(Path::new("demo")));
+    let args = Cli::parse();
+
+    dbg!(parse_homework(&args.vault));
 
     return Ok(());
 
