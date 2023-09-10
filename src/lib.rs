@@ -1,9 +1,9 @@
 use date::Date;
 use regex::Regex;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::{self};
 use std::path::Path;
-use serde::Deserialize;
 
 mod date;
 
@@ -93,12 +93,13 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
                 tasks,
             }
         })
+        .filter(|assignment| !assignment.to.had_passed())
         .collect()
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    pub subjects: HashMap<String, String>
+    pub subjects: HashMap<String, String>,
 }
 
 pub fn parse_config(path: &Path) -> Config {

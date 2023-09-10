@@ -1,3 +1,5 @@
+use chrono::{Datelike, Local};
+
 use regex::Regex;
 
 /// YMD date
@@ -29,5 +31,23 @@ impl Date {
             month,
             day,
         )
+    }
+
+    pub fn now() -> Self {
+        let system_date = Local::now();
+        let year = system_date.year() - 2000;
+
+        Self(
+            year.try_into().unwrap(),
+            system_date.month().try_into().unwrap(),
+            system_date.day().try_into().unwrap(),
+        )
+    }
+
+    pub fn had_passed(&self) -> bool {
+        let now = Date::now();
+        
+        // Please create an issue if you know how to do it properly
+        self.0 < now.0 || self.1 < now.1 || self.2 < now.2
     }
 }

@@ -1,8 +1,8 @@
-use std::{path::{PathBuf}, collections::HashMap};
+use std::{collections::HashMap, path::PathBuf};
 
 use clap::Parser;
 use color_eyre::eyre::Result;
-use homeworkbot::{parse_homework, Assignment, parse_config};
+use homeworkbot::{parse_config, parse_homework, Assignment};
 use teloxide::{prelude::*, utils::command::BotCommands};
 
 /// A telegram bot that sends the homework
@@ -88,7 +88,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 }
 
 fn form_message(assignment: &Assignment, subject_names: &HashMap<String, String>) -> String {
-    let subject = subject_names.get(&assignment.subject).unwrap_or(&assignment.subject);
+    let subject = subject_names
+        .get(&assignment.subject)
+        .unwrap_or(&assignment.subject);
 
     if assignment.tasks.len() == 1 {
         format!("{}: {}", subject, assignment.tasks[0].body)
