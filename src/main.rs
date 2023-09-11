@@ -69,16 +69,11 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         Command::Start => {
             bot.send_message(
                 msg.chat.id,
-                format!("Hello world. I am {}, version 0.1.0 beta", config.name),
+                format!("Hello world. I am {}, version 0.1.1", config.name),
             )
             .await?;
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
                 .await?;
-            bot.send_message(
-                msg.chat.id,
-                "Known issues: /from and /to will crash the bot if it fails to parse them",
-            )
-            .await?;
         }
         Command::Help => {
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
@@ -92,15 +87,17 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             }
         }
         Command::From(date) => {
-            if date.is_empty() {
-                bot.send_message(
-                    msg.chat.id,
-                    "Please specify a date (e.g. 09-15 for Sep 15th)",
-                )
-                .await?;
-                return Ok(());
-            }
-            let date = Date::from(&date);
+            let date = match Date::from(&date) {
+                Ok(date) => date,
+                Err(_) => {
+                    bot.send_message(
+                        msg.chat.id,
+                        "Please use the MM-DD format (e.g. 09-15 for Sep 15th)",
+                    )
+                    .await?;
+                    return Ok(());
+                }
+            };
 
             for assignment in homework {
                 if assignment.from != date {
@@ -113,15 +110,17 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             }
         }
         Command::To(date) => {
-            if date.is_empty() {
-                bot.send_message(
-                    msg.chat.id,
-                    "Please specify a date (e.g. 09-15 for Sep 15th)",
-                )
-                .await?;
-                return Ok(());
-            }
-            let date = Date::from(&date);
+            let date = match Date::from(&date) {
+                Ok(date) => date,
+                Err(_) => {
+                    bot.send_message(
+                        msg.chat.id,
+                        "Please use the MMDD format (e.g. 09-15 for Sep 15th)",
+                    )
+                    .await?;
+                    return Ok(());
+                }
+            };
 
             for assignment in homework {
                 if assignment.to != date {

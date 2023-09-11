@@ -91,8 +91,8 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
 
             Assignment {
                 subject,
-                from: Date::from(end),
-                to: Date::from(to),
+                from: Date::from(end).unwrap(),
+                to: Date::from(to).unwrap(),
                 tasks,
             }
         })
