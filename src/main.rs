@@ -134,10 +134,10 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             }
         }
         Command::Today => {
-            let now = Date::now();
+            let today = Date::now();
 
             for assignment in homework {
-                if assignment.to != now {
+                if assignment.from != today {
                     continue;
                 }
 
