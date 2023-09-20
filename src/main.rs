@@ -35,7 +35,7 @@ enum Command {
     Tomorrow,
     #[command(description = "show homework from the specified date (year-month-day or month-day)")]
     From(String), // todo!("use the Date type")
-    #[command(description = "show homework from the specified date (year-month-day or month-day)")]
+    #[command(description = "show homework due the specified date (year-month-day or month-day)")]
     To(String),
 }
 
