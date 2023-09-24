@@ -60,7 +60,7 @@ fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
 
 /// todo!("add result")
 pub fn parse_homework(path: &Path) -> Vec<Assignment> {
-    let end_regex = Regex::new(r"FROM \d{0,2}(\d{0,2}-?\d{2}-?\d{2})").unwrap();
+    let end_regex = Regex::new(r"(?:FROM|from:) \d{0,2}(\d{0,2}-?\d{2}-?\d{2})").unwrap();
     let filename_regex = Regex::new(r"^\d{0,2}(\d{4})-(\w{3})-homework.md$").unwrap();
     let task_regex = Regex::new(r"[+*-] \[.\] (.+)").unwrap();
 
@@ -96,7 +96,6 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
                 tasks,
             }
         })
-        .filter(|assignment| !assignment.to.had_passed())
         .collect()
 }
 

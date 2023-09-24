@@ -80,7 +80,10 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 .await?;
         }
         Command::All => {
-            for assignment in homework {
+            for assignment in homework
+                .iter()
+                .filter(|assignment| !assignment.to.had_passed())
+            {
                 let message = form_message(&assignment, &subjects);
                 println!("SENDING `{}`", message);
                 bot.send_message(msg.chat.id, message).await?;

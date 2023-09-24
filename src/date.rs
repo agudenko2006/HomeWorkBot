@@ -1,6 +1,6 @@
 use chrono::{Datelike, Local};
 
-use color_eyre::eyre::{Result, ContextCompat};
+use color_eyre::eyre::{ContextCompat, Result};
 use regex::Regex;
 
 /// YMD date
@@ -17,7 +17,8 @@ impl Date {
     pub fn from(string: &str) -> Result<Self> {
         let regex = Regex::new(r"^(\d{2})?-?(\d{2})-?(\d{2})$")?;
         let caps = regex
-            .captures(string).wrap_err(format!("`{}` is not a Date", string))?;
+            .captures(string)
+            .wrap_err(format!("`{}` is not a Date", string))?;
 
         let year = caps.get(1);
         let month = caps.get(2).unwrap().as_str().parse().unwrap();
