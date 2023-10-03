@@ -69,7 +69,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         Command::Start => {
             bot.send_message(
                 msg.chat.id,
-                format!("Hello world. I am {}, version 0.1.1", config.name),
+                format!("Hello world. I am {}, version 0.1.2", config.name),
             )
             .await?;
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
