@@ -3,7 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 use clap::Parser;
 use color_eyre::eyre::Result;
 use homeworkbot::{date::Date, parse_config, parse_homework, Assignment};
-use teloxide::{prelude::*, utils::command::BotCommands};
+use teloxide::{prelude::*, utils::command::BotCommands, types::ParseMode};
 
 /// A telegram bot that sends the homework
 #[derive(Parser, Debug)]
@@ -69,7 +69,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         Command::Start => {
             bot.send_message(
                 msg.chat.id,
-                format!("Hello world. I am {}, version 0.1.2", config.name),
+                format!("Hello world. I am {}, version 0.2.0", config.name),
             )
             .await?;
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
@@ -84,9 +84,11 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 .iter()
                 .filter(|assignment| !assignment.to.had_passed())
             {
-                let message = form_message(&assignment, &subjects);
+                let message = form_message(assignment, &subjects);
                 println!("SENDING `{}`", message);
-                bot.send_message(msg.chat.id, message).await?;
+                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                    bot.send_message(msg.chat.id, &message).await?;
+                };
             }
         }
         Command::From(date) => {
@@ -109,7 +111,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
                 let message = form_message(&assignment, &subjects);
                 println!("SENDING `{}`", message);
-                bot.send_message(msg.chat.id, message).await?;
+                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                    bot.send_message(msg.chat.id, &message).await?;
+                };
             }
         }
         Command::To(date) => {
@@ -132,7 +136,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
                 let message = form_message(&assignment, &subjects);
                 println!("SENDING `{}`", message);
-                bot.send_message(msg.chat.id, message).await?;
+                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                    bot.send_message(msg.chat.id, &message).await?;
+                };
             }
         }
         Command::Today => {
@@ -145,7 +151,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
                 let message = form_message(&assignment, &subjects);
                 println!("SENDING `{}`", message);
-                bot.send_message(msg.chat.id, message).await?;
+                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                    bot.send_message(msg.chat.id, &message).await?;
+                };
             }
         }
         Command::Tomorrow => {
@@ -159,7 +167,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
                 let message = form_message(&assignment, &subjects);
                 println!("SENDING `{}`", message);
-                bot.send_message(msg.chat.id, message).await?;
+                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                    bot.send_message(msg.chat.id, &message).await?;
+                };
             }
         }
     };
@@ -178,7 +188,7 @@ fn form_message(assignment: &Assignment, subject_names: &HashMap<String, String>
         let tasks: String = assignment
             .tasks
             .iter()
-            .map(|task| format!("+ {}\n", task.body))
+            .map(|task| format!("\\+ {}\n", task.body))
             .collect();
 
         format!("{}:\n{}", subject, tasks)
