@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::{self};
 use std::path::Path;
+#[macro_use] extern crate log;
 
 pub mod date;
 
@@ -27,10 +28,12 @@ pub struct File {
 
 fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
     if !path.is_dir() {
-        panic!("Provided path ({:?}) is not a directory", path)
+        panic!("Provided path ({:?}) is not a directory", path);
     }
 
     let regex = Regex::new(r"^\d{0,2}(\d{4})-(\w{3})-homework.md$").unwrap();
+
+    trace!("Reading files in {:?}", path);
 
     let raw: Vec<_> = fs::read_dir(path)?
         .map(|entry| {
@@ -43,12 +46,15 @@ fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
             }
 
             let name = entry.file_name().into_string().unwrap();
+            trace!("Found {}", name);
             if let Some(_) = regex.captures(&name) {
+                trace!("It matches the regex, using it");
                 vec![File {
                     name,
                     body: fs::read_to_string(path).unwrap(),
                 }]
             } else {
+                trace!("Not an assignment, throwing it away");
                 vec![]
             }
         })
@@ -63,6 +69,8 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
     let end_regex = Regex::new(r"(?:FROM|from:) \d{0,2}(\d{0,2}-?\d{2}-?\d{2})").unwrap();
     let filename_regex = Regex::new(r"^\d{0,2}(\d{4})-(\w{3})-homework.md$").unwrap();
     let task_regex = Regex::new(r"[+*-] \[.\] (.+)").unwrap();
+
+    trace!("Forming assignments");
 
     read_directory(path)
         .unwrap()
@@ -89,12 +97,16 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
                 })
                 .collect();
 
-            Assignment {
+            let assignment = Assignment {
                 subject,
                 from: Date::from(end).unwrap(),
                 to: Date::from(to).unwrap(),
                 tasks,
-            }
+            };
+
+            trace!("Formed assignment: {:#?}", assignment);
+
+            assignment
         })
         .collect()
 }
