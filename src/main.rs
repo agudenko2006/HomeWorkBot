@@ -3,8 +3,9 @@ use std::{collections::HashMap, path::PathBuf};
 use clap::Parser;
 use color_eyre::eyre::Result;
 use homeworkbot::{date::Date, parse_config, parse_homework, Assignment};
-use teloxide::{prelude::*, utils::command::BotCommands, types::ParseMode};
-#[macro_use] extern crate log;
+use teloxide::{prelude::*, types::ParseMode, utils::command::BotCommands};
+#[macro_use]
+extern crate log;
 
 /// A telegram bot that sends the homework
 #[derive(Parser, Debug)]
@@ -26,8 +27,10 @@ struct Cli {
 enum Command {
     #[command(description = "show the version and help")]
     Start,
-    #[command(description = "display this text")]
+    #[command(description = "show this text")]
     Help,
+    #[command(description = "show the changelog")]
+    Changelog,
     #[command(description = "show all the homework that's not past the due date")]
     All,
     #[command(description = "show homework from today")]
@@ -71,7 +74,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         Command::Start => {
             bot.send_message(
                 msg.chat.id,
-                format!("Hello world. I am {}, version 0.2.0", config.name),
+                format!("{} V0.2.0 Online", config.name),
             )
             .await?;
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
@@ -81,6 +84,18 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
                 .await?;
         }
+        Command::Changelog => {
+            bot.send_message(
+                msg.chat.id,
+                format!("{} V0.2.0 Online", config.name),
+            )
+            .await?;
+            bot.send_message(
+                msg.chat.id,
+                "Now I can use markdown, that means _formatted_ *text* and proper links\nFor example, [here's my source code](https://github.com/agudenko2006/homeworkbot)"
+            ).parse_mode(ParseMode::MarkdownV2)
+            .await?;
+        }
         Command::All => {
             for assignment in homework
                 .iter()
@@ -88,7 +103,12 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             {
                 let message = form_message(assignment, &subjects);
                 debug!("SENDING `{}`", message);
-                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                if (bot
+                    .send_message(msg.chat.id, &message)
+                    .parse_mode(ParseMode::MarkdownV2)
+                    .await)
+                    .is_err()
+                {
                     bot.send_message(msg.chat.id, &message).await?;
                 };
             }
@@ -113,7 +133,12 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
                 let message = form_message(&assignment, &subjects);
                 debug!("SENDING `{}`", message);
-                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                if (bot
+                    .send_message(msg.chat.id, &message)
+                    .parse_mode(ParseMode::MarkdownV2)
+                    .await)
+                    .is_err()
+                {
                     bot.send_message(msg.chat.id, &message).await?;
                 };
             }
@@ -138,7 +163,12 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
                 let message = form_message(&assignment, &subjects);
                 debug!("SENDING `{}`", message);
-                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                if (bot
+                    .send_message(msg.chat.id, &message)
+                    .parse_mode(ParseMode::MarkdownV2)
+                    .await)
+                    .is_err()
+                {
                     bot.send_message(msg.chat.id, &message).await?;
                 };
             }
@@ -153,7 +183,12 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
                 let message = form_message(&assignment, &subjects);
                 debug!("SENDING `{}`", message);
-                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                if (bot
+                    .send_message(msg.chat.id, &message)
+                    .parse_mode(ParseMode::MarkdownV2)
+                    .await)
+                    .is_err()
+                {
                     bot.send_message(msg.chat.id, &message).await?;
                 };
             }
@@ -169,7 +204,12 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
 
                 let message = form_message(&assignment, &subjects);
                 debug!("SENDING `{}`", message);
-                if (bot.send_message(msg.chat.id, &message).parse_mode(ParseMode::MarkdownV2).await).is_err() {
+                if (bot
+                    .send_message(msg.chat.id, &message)
+                    .parse_mode(ParseMode::MarkdownV2)
+                    .await)
+                    .is_err()
+                {
                     bot.send_message(msg.chat.id, &message).await?;
                 };
             }
@@ -177,7 +217,6 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
     };
 
     info!("Responded");
-
     Ok(())
 }
 

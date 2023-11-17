@@ -4,7 +4,8 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::{self};
 use std::path::Path;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 
 pub mod date;
 
