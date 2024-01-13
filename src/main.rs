@@ -1,9 +1,11 @@
 use std::{collections::HashMap, path::PathBuf};
 
+use chrono::{Duration, Local, NaiveDate};
 use clap::Parser;
 use color_eyre::eyre::Result;
-use homeworkbot::{date::Date, parse_config, parse_homework, Assignment};
+use homeworkbot::{parse_config, parse_homework, Assignment};
 use teloxide::{prelude::*, types::ParseMode, utils::command::BotCommands};
+use regex::Regex;
 #[macro_use]
 extern crate log;
 
@@ -69,14 +71,13 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
     let config = parse_config(&args.config);
     let subjects = config.subjects;
 
+    let today = Local::now().date_naive();
+
     // todo!("simplify this madness")
     match cmd {
         Command::Start => {
-            bot.send_message(
-                msg.chat.id,
-                format!("{} V0.2.0 Online", config.name),
-            )
-            .await?;
+            bot.send_message(msg.chat.id, format!("{} V0.3.0 Online", config.name))
+                .await?;
             bot.send_message(msg.chat.id, Command::descriptions().to_string())
                 .await?;
         }
@@ -85,27 +86,21 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 .await?;
         }
         Command::Changelog => {
+            bot.send_message(msg.chat.id, format!("{} V0.3.0 Online", config.name))
+                .await?;
             bot.send_message(
                 msg.chat.id,
-                format!("{} V0.2.0 Online", config.name),
-            )
-            .await?;
-            bot.send_message(
-                msg.chat.id,
-                "Now I can use markdown, that means _formatted_ *text* and proper links\nFor example, [here's my source code](https://github.com/agudenko2006/homeworkbot)"
-            ).parse_mode(ParseMode::MarkdownV2)
+            "Dates are FINALLY fixed"
+            ).parse_mode(ParseMode::Html)
             .await?;
         }
         Command::All => {
-            for assignment in homework
-                .iter()
-                .filter(|assignment| !assignment.to.had_passed())
-            {
+            for assignment in homework.iter().filter(|assignment| assignment.to > today) {
                 let message = form_message(assignment, &subjects);
                 debug!("SENDING `{}`", message);
                 if (bot
                     .send_message(msg.chat.id, &message)
-                    .parse_mode(ParseMode::MarkdownV2)
+                    .parse_mode(ParseMode::Html)
                     .await)
                     .is_err()
                 {
@@ -114,12 +109,12 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             }
         }
         Command::From(date) => {
-            let date = match Date::from(&date) {
+            let date = match NaiveDate::parse_from_str(&date, "%m%d") {
                 Ok(date) => date,
                 Err(_) => {
                     bot.send_message(
                         msg.chat.id,
-                        "Please use the MM-DD format (e.g. 09-15 for Sep 15th)",
+                        "Please use the MM-DD format (e.g. 0915 for Sep 15th)",
                     )
                     .await?;
                     return Ok(());
@@ -135,7 +130,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 debug!("SENDING `{}`", message);
                 if (bot
                     .send_message(msg.chat.id, &message)
-                    .parse_mode(ParseMode::MarkdownV2)
+                    .parse_mode(ParseMode::Html)
                     .await)
                     .is_err()
                 {
@@ -144,12 +139,12 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             }
         }
         Command::To(date) => {
-            let date = match Date::from(&date) {
+            let date = match NaiveDate::parse_from_str(&date, "%y%m%d") {
                 Ok(date) => date,
                 Err(_) => {
                     bot.send_message(
                         msg.chat.id,
-                        "Please use the MMDD format (e.g. 09-15 for Sep 15th)",
+                        "Please use the yyMMDD format (e.g. 230915 for Sep 15th of 2023)",
                     )
                     .await?;
                     return Ok(());
@@ -165,7 +160,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 debug!("SENDING `{}`", message);
                 if (bot
                     .send_message(msg.chat.id, &message)
-                    .parse_mode(ParseMode::MarkdownV2)
+                    .parse_mode(ParseMode::Html)
                     .await)
                     .is_err()
                 {
@@ -174,8 +169,6 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             }
         }
         Command::Today => {
-            let today = Date::now();
-
             for assignment in homework {
                 if assignment.from != today {
                     continue;
@@ -185,7 +178,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 debug!("SENDING `{}`", message);
                 if (bot
                     .send_message(msg.chat.id, &message)
-                    .parse_mode(ParseMode::MarkdownV2)
+                    .parse_mode(ParseMode::Html)
                     .await)
                     .is_err()
                 {
@@ -194,8 +187,8 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             }
         }
         Command::Tomorrow => {
-            let now = Date::now();
-            let tomorrow = Date::new(now.0, now.1, now.2 + 1);
+            let today = Local::now().date_naive();
+            let tomorrow = today + Duration::days(1);
 
             for assignment in homework {
                 if assignment.to != tomorrow {
@@ -206,7 +199,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
                 debug!("SENDING `{}`", message);
                 if (bot
                     .send_message(msg.chat.id, &message)
-                    .parse_mode(ParseMode::MarkdownV2)
+                    .parse_mode(ParseMode::Html)
                     .await)
                     .is_err()
                 {
@@ -225,13 +218,17 @@ fn form_message(assignment: &Assignment, subject_names: &HashMap<String, String>
         .get(&assignment.subject)
         .unwrap_or(&assignment.subject);
 
+    let re = Regex::new(r"\[(.*)\]\((.*)\)").unwrap();
+    let html_link_pattern = "<a href=\"$2\">$1</a>";
+
     if assignment.tasks.len() == 1 {
-        format!("{}: {}", subject, assignment.tasks[0].body)
+        format!("{}: {}", subject, re.replace(&assignment.tasks[0].body, html_link_pattern))
     } else {
         let tasks: String = assignment
             .tasks
             .iter()
-            .map(|task| format!("\\+ {}\n", task.body))
+            .map(|task| re.replace(&task.body, html_link_pattern))
+            .map(|task| format!("+ {}\n", task))
             .collect();
 
         format!("{}:\n{}", subject, tasks)

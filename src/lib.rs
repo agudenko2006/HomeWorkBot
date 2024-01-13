@@ -1,4 +1,4 @@
-use date::Date;
+use chrono::NaiveDate;
 use regex::Regex;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -7,13 +7,11 @@ use std::path::Path;
 #[macro_use]
 extern crate log;
 
-pub mod date;
-
 #[derive(Debug)]
 pub struct Assignment {
     pub subject: String,
-    pub from: Date,
-    pub to: Date,
+    pub from: NaiveDate,
+    pub to: NaiveDate,
     pub tasks: Vec<Task>,
 }
 
@@ -32,7 +30,7 @@ fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
         panic!("Provided path ({:?}) is not a directory", path);
     }
 
-    let regex = Regex::new(r"^\d{0,2}(\d{4})-(\w{3})-homework.md$").unwrap();
+    let regex = Regex::new(r"^(\d{6})-(\w{3})-homework.md$").unwrap();
 
     trace!("Reading files in {:?}", path);
 
@@ -68,7 +66,7 @@ fn read_directory(path: &Path) -> std::io::Result<Vec<File>> {
 /// todo!("add result")
 pub fn parse_homework(path: &Path) -> Vec<Assignment> {
     let end_regex = Regex::new(r"(?:FROM|from:) \d{0,2}(\d{0,2}-?\d{2}-?\d{2})").unwrap();
-    let filename_regex = Regex::new(r"^\d{0,2}(\d{4})-(\w{3})-homework.md$").unwrap();
+    let filename_regex = Regex::new(r"^(\d{6})-(\w{3})-homework.md$").unwrap();
     let task_regex = Regex::new(r"[+*-] \[.\] (.+)").unwrap();
 
     trace!("Forming assignments");
@@ -81,7 +79,7 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
 
             let subject = filename.get(2).unwrap().as_str().to_string();
             let to = filename.get(1).unwrap().as_str();
-            let end = end_regex
+            let from = end_regex
                 .captures(&file.body)
                 .expect(&format!(
                     "Couldn't find the date string in the assignment `{}`",
@@ -100,8 +98,8 @@ pub fn parse_homework(path: &Path) -> Vec<Assignment> {
 
             let assignment = Assignment {
                 subject,
-                from: Date::from(end).unwrap(),
-                to: Date::from(to).unwrap(),
+                from: NaiveDate::parse_from_str(from, "%y-%m-%d").unwrap(),
+                to: NaiveDate::parse_from_str(to, "%y%m%d").unwrap(),
                 tasks,
             };
 
